@@ -7,13 +7,6 @@ if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   execute('!git clone https://github.com/wbthomason/packer.nvim '.. install_path)
 end
 
-vim.api.nvim_exec([[
-  augroup Packer
-    autocmd!
-    autocmd BufWritePost init.lua PackerCompile
-  augroup end
-]], false)
-
 local use = require('packer').use
 require('packer').startup(function()
   use 'wbthomason/packer.nvim'       -- Package manager
@@ -26,11 +19,12 @@ require('packer').startup(function()
   use 'joshdick/onedark.vim'         -- Theme inspired by Atom
   use 'itchyny/lightline.vim'        -- Fancier statusline
   -- Add indentation guides even on blank lines
-  use { 'lukas-reineke/indent-blankline.nvim', branch="lua" }
+  use { 'lukas-reineke/indent-blankline.nvim', branch="master" }
   -- Add git related info in the signs columns and popups
   use {'lewis6991/gitsigns.nvim', requires = {'nvim-lua/plenary.nvim'} }
   use 'neovim/nvim-lspconfig'        -- Collection of configurations for built-in LSP client
   use 'hrsh7th/nvim-compe'           -- Autocompletion plugin
+  use 'mattn/vim-goimports'
 end)
 
 --Incremental live completion
@@ -85,6 +79,8 @@ vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", {noremap= true, e
 
 --Remap escape to leave terminal mode
 vim.api.nvim_set_keymap('t', '<Esc>', [[<c-\><c-n>]], {noremap = true})
+
+vim.api.nvim_set_keymap('', '<F3>', ":match StatusLineTerm /<C-R><C-W>/<CR>", {noremap = true})
 
 --Add map to enter paste mode
 vim.o.pastetoggle="<F3>"
@@ -144,14 +140,6 @@ vim.api.nvim_set_keymap('n', '<leader>gp', [[<cmd>lua require('telescope.builtin
 -- Change preview window location
 vim.g.splitbelow = true
 
--- Highlight on yank
-vim.api.nvim_exec([[
-  augroup YankHighlight
-    autocmd!
-    autocmd TextYankPost * silent! lua vim.highlight.on_yank()
-  augroup end
-]], false)
-
 -- Y yank until the end of line
 vim.api.nvim_set_keymap('n', 'Y', 'y$', { noremap = true})
 --
@@ -173,44 +161,17 @@ local on_attach = function(_client, bufnr)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>rn', '<cmd>lua vim.lsp.buf.rename()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', 'gr', '<cmd>lua vim.lsp.buf.references()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>ca', '<cmd>lua vim.lsp.buf.code_action()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>e', '<cmd>lua vim.lsp.diagnostic.show_line_diagnostics()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', '[d', '<cmd>lua vim.lsp.diagnostic.goto_prev()<CR>', opts)
-  vim.api.nvim_buf_set_keymap(bufnr, 'n', ']d', '<cmd>lua vim.lsp.diagnostic.goto_next()<CR>', opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>e', '<cmd>lua vim.diagnostic.show_line_diagnostics()<CR>', opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<CR>', opts)
+  vim.api.nvim_buf_set_keymap(bufnr, 'n', ']d', '<cmd>lua vim.diagnostic.goto_next()<CR>', opts)
   vim.api.nvim_buf_set_keymap(bufnr, 'n', '<leader>q', '<cmd>lua vim.lsp.diagnostic.set_loclist()<CR>', opts)
 end
 
 -- Enable the following language servers
-local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
+local servers = { 'gopls' }
 for _, lsp in ipairs(servers) do
   nvim_lsp[lsp].setup { on_attach = on_attach }
 end
-
-local sumneko_root_path = vim.fn.getenv("HOME").."/.local/bin/sumneko_lua" -- Change to your sumneko root installation
-local sumneko_binary_path = "/bin/linux/lua-language-server" -- Change to your OS specific output folder
-nvim_lsp.sumneko_lua.setup {
-  cmd = {sumneko_root_path .. sumneko_binary_path, "-E", sumneko_root_path.."/main.lua" };
-  on_attach = on_attach,
-  settings = {
-      Lua = {
-          runtime = {
-              version = 'LuaJIT',
-              path = vim.split(package.path, ';'),
-          },
-          diagnostics = {
-              globals = {'vim'},
-          },
-          workspace = {
-              library = {
-                  [vim.fn.expand('$VIMRUNTIME/lua')] = true,
-                  [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
-              },
-          },
-      },
-  },
-}
-
--- Map :Format to vim.lsp.buf.formatting()
-vim.cmd([[ command! Format execute 'lua vim.lsp.buf.formatting()' ]])
 
 -- Set completeopt to have a better completion experience
 vim.o.completeopt="menuone,noinsert"
@@ -241,12 +202,12 @@ local t = function(str)
 end
 
 local check_back_space = function()
-    local col = vim.fn.col('.') - 1
-    if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
-        return true
-    else
-        return false
-    end
+  local col = vim.fn.col('.') - 1
+  if col == 0 or vim.fn.getline('.'):sub(col, col):match('%s') then
+    return true
+  else
+    return false
+  end
 end
 
 -- Use (s-)tab to:
@@ -273,3 +234,59 @@ vim.api.nvim_set_keymap("i", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<Tab>", "v:lua.tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("i", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
 vim.api.nvim_set_keymap("s", "<S-Tab>", "v:lua.s_tab_complete()", {expr = true})
+
+local opts = { noremap=true, silent=true }
+vim.api.nvim_set_keymap("n", "<C-n>", ":cn<CR>", opts)
+vim.api.nvim_set_keymap("n", "<C-p>", ":cp<CR>", opts)
+vim.api.nvim_set_keymap("n", "<C-c>", ":ccl<CR>", opts)
+
+function goimports(timeoutms)
+  local context = { source = { organizeImports = true } }
+  vim.validate { context = { context, "t", true } }
+
+  local params = vim.lsp.util.make_range_params()
+  params.context = context
+
+  -- See the implementation of the textDocument/codeAction callback
+  -- (lua/vim/lsp/handler.lua) for how to do this properly.
+  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeout_ms)
+  if not result or next(result) == nil then return end
+  local actions = result[1].result
+  if not actions then return end
+  local action = actions[1]
+
+  -- textDocument/codeAction can return either Command[] or CodeAction[]. If it
+  -- is a CodeAction, it can have either an edit, a command or both. Edits
+  -- should be executed first.
+  if action.edit or type(action.command) == "table" then
+    if action.edit then
+      vim.lsp.util.apply_workspace_edit(action.edit)
+    end
+    if type(action.command) == "table" then
+      vim.lsp.buf.execute_command(action.command)
+    end
+  else
+    vim.lsp.buf.execute_command(action)
+  end
+end
+
+function nvim_create_augroups(definitions)
+  for group_name, definition in pairs(definitions) do
+    vim.api.nvim_command('augroup '..group_name)
+    vim.api.nvim_command('autocmd!')
+    for _, def in ipairs(definition) do
+      local command = table.concat(vim.tbl_flatten{'autocmd', def}, ' ')
+      vim.api.nvim_command(command)
+    end
+    vim.api.nvim_command('augroup END')
+  end
+end
+
+nvim_create_augroups({
+  auto_cmds = {
+    {"BufWritePost", "init.lua", "PackerCompile"},
+    {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
+    {"BufWritePre", "*.go", "lua vim.lsp.buf.formatting()"},
+    {"BufWritePre", "*.go", "lua goimports(1000)"},
+  },
+})
