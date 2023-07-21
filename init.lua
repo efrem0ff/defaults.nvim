@@ -255,12 +255,13 @@ function goimports(timeoutms)
   if not actions then return end
   local action = actions[1]
 
+  local buf = vim.api.nvim_get_current_buf()
   -- textDocument/codeAction can return either Command[] or CodeAction[]. If it
   -- is a CodeAction, it can have either an edit, a command or both. Edits
   -- should be executed first.
   if action.edit or type(action.command) == "table" then
     if action.edit then
-      vim.lsp.util.apply_workspace_edit(action.edit)
+      vim.lsp.util.apply_workspace_edit(action.edit, buf, 'utf-16')
     end
     if type(action.command) == "table" then
       vim.lsp.buf.execute_command(action.command)
@@ -286,7 +287,7 @@ nvim_create_augroups({
   auto_cmds = {
     {"BufWritePost", "init.lua", "PackerCompile"},
     {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
-    {"BufWritePre", "*.go", "lua vim.lsp.buf.formatting()"},
+    {"BufWritePre", "*.go", "lua vim.lsp.buf.format()"},
     {"BufWritePre", "*.go", "lua goimports(1000)"},
   },
 })
