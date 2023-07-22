@@ -2,7 +2,6 @@
 local execute = vim.api.nvim_command
 
 local install_path = vim.fn.stdpath('data') .. '/site/pack/packer/start/packer.nvim'
-
 if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
   execute('!git clone https://github.com/wbthomason/packer.nvim '.. install_path)
 end
@@ -23,8 +22,8 @@ require('packer').startup(function()
   -- Add git related info in the signs columns and popups
   use {'lewis6991/gitsigns.nvim', requires = {'nvim-lua/plenary.nvim'} }
   use 'neovim/nvim-lspconfig'        -- Collection of configurations for built-in LSP client
-  use 'hrsh7th/nvim-compe'           -- Autocompletion plugin
-  use 'mattn/vim-goimports'
+  use 'hrsh7th/nvim-cmp'             -- Autocompletion plugin
+  use 'mattn/vim-goimports'          -- Pluging managin gopls imports
 end)
 
 --Incremental live completion
@@ -176,8 +175,8 @@ end
 -- Set completeopt to have a better completion experience
 vim.o.completeopt="menuone,noinsert"
 
--- Compe setup
-require'compe'.setup {
+-- cmp setup
+require'cmp'.setup {
   enabled = true;
   autocomplete = true;
   debug = false;
@@ -189,7 +188,9 @@ require'compe'.setup {
   max_abbr_width = 100;
   max_kind_width = 100;
   max_menu_width = 100;
-  documentation = true;
+  window = {
+    bordered = true;
+  };
 
   source = {
     path = true;
@@ -255,13 +256,12 @@ function goimports(timeoutms)
   if not actions then return end
   local action = actions[1]
 
-  local buf = vim.api.nvim_get_current_buf()
   -- textDocument/codeAction can return either Command[] or CodeAction[]. If it
   -- is a CodeAction, it can have either an edit, a command or both. Edits
   -- should be executed first.
   if action.edit or type(action.command) == "table" then
     if action.edit then
-      vim.lsp.util.apply_workspace_edit(action.edit, buf, 'utf-16')
+      vim.lsp.util.apply_workspace_edit(action.edit, vim.lsp.client().offset_encoding)
     end
     if type(action.command) == "table" then
       vim.lsp.buf.execute_command(action.command)
