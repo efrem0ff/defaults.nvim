@@ -96,11 +96,6 @@ vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", {noremap= true, e
 --Remap escape to leave terminal mode
 vim.api.nvim_set_keymap('t', '<Esc>', [[<c-\><c-n>]], {noremap = true})
 
-vim.api.nvim_set_keymap('', '<F3>', ":match StatusLineTerm /<C-R><C-W>/<CR>", {noremap = true})
-
---Add map to enter paste mode
-vim.o.pastetoggle="<F3>"
-
 --Map blankline
 vim.g.indent_blankline_char = "┊"
 vim.g.indent_blankline_filetype_exclude = { 'help', 'packer' }
@@ -157,7 +152,7 @@ vim.api.nvim_set_keymap('n', '<leader>gp', [[<cmd>lua require('telescope.builtin
 vim.g.splitbelow = true
 
 -- Y yank until the end of line
-vim.api.nvim_set_keymap('n', 'Y', 'y$', { noremap = true})
+vim.api.nvim_set_keymap('n', 'Y', 'yy', { noremap = true})
 --
 -- LSP settings
 local nvim_lsp = require('lspconfig')
