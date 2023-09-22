@@ -134,8 +134,18 @@ require('telescope').setup {
     },
     generic_sorter =  require'telescope.sorters'.get_fzy_sorter,
     file_sorter =  require'telescope.sorters'.get_fzy_sorter,
+  },
+  pickers = {
+    buffers = {
+      mappings = {
+        i = {
+          ["<C-d>"] = require'telescope.actions'.delete_buffer + require'telescope.actions'.move_to_top,
+        }
+      }
+    }
   }
 }
+
 --Add leader shortcuts
 vim.api.nvim_set_keymap('n', '<leader>f', [[<cmd>lua require('telescope.builtin').find_files()<cr>]], { noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<leader><space>', [[<cmd>lua require('telescope.builtin').buffers()<cr>]], { noremap = true, silent = true})
