@@ -254,10 +254,14 @@ cmp.setup({
 
 --nvim-cmp
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
+capabilities.textDocument.positionEncoding = "utf-16"
 
 -- setup languages
 -- GoLang
 nvim_lsp['gopls'].setup{
+  root_dir = function()
+    return vim.loop.cwd()
+  end,
   on_attach = on_attach,
   capabilities = capabilities,
   settings = {
