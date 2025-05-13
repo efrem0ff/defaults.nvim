@@ -39,6 +39,7 @@ require('packer').startup(function()
  -- Pluging managin gopls imports
   use 'mattn/vim-goimports'
   vim.opt.completeopt = { "menu", "menuone", "noselect" }
+  use 'hashivim/vim-terraform'
 end)
 
 vim.o.shell = "/bin/zsh"
@@ -94,7 +95,7 @@ vim.g.maplocalleader = " "
 
 --Remap for dealing with word wrap
 vim.api.nvim_set_keymap('n', 'k', "v:count == 0 ? 'gk' : 'k'", { noremap=true, expr = true, silent = true})
-vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", {noremap= true, expr = true, silent = true})
+vim.api.nvim_set_keymap('n', 'j', "v:count == 0 ? 'gj' : 'j'", { noremap=true, expr = true, silent = true})
 
 --Remap escape to leave terminal mode
 vim.api.nvim_set_keymap('t', '<Esc>', [[<c-\><c-n>]], {noremap = true})
@@ -181,7 +182,6 @@ vim.g.splitbelow = true
 vim.api.nvim_set_keymap('n', 'Y', 'yy', { noremap = true})
 --
 -- LSP settings
-local nvim_lsp = require('lspconfig')
 local on_attach = function(_client, bufnr)
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
@@ -267,30 +267,35 @@ cmp.setup({
 --nvim-cmp
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 capabilities.textDocument.positionEncoding = "utf-16"
-
 -- setup languages
 -- GoLang
-nvim_lsp['gopls'].setup{
-  root_dir = function()
-    return vim.loop.cwd()
-  end,
-  on_attach = on_attach,
-  capabilities = capabilities,
-  settings = {
-    gopls = {
-      buildFlags =  {"-tags=integration"},
-      experimentalPostfixCompletions = true,
-      analyses = {
-        unusedparams = true,
-        shadow = true,
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "go",
+  callback = function()
+    vim.lsp.start({
+      name = "gopls",
+      cmd = { "gopls" },
+      -- root_dir = vim.loop.cwd(),
+      root_dir = vim.fs.dirname(vim.fs.find({ "go.mod", ".git" }, { upward = true })[1]),
+      on_attach = on_attach,
+      capabilities = capabilities,
+      settings = {
+        gopls = {
+          buildFlags =  {"-tags=integration"},
+          experimentalPostfixCompletions = true,
+          analyses = {
+            unusedparams = true,
+            shadow = true,
+          },
+          staticcheck = true,
+        },
       },
-      staticcheck = true,
-    },
-  },
-  init_options = {
-    usePlaceholders = true,
-  }
-}
+      init_options = {
+        usePlaceholders = true,
+      },
+    })
+  end,
+})
 
 local opts = { noremap=true, silent=true }
 vim.api.nvim_set_keymap("n", "<C-n>", ":cn<CR>", opts)
@@ -335,5 +340,6 @@ nvim_create_augroups({
     {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
     {"BufWritePre", "*.go", "lua vim.lsp.buf.format()"},
     {"BufWritePre", "*.go", "lua goimports(3000)"},
+    {"BufNewFile,BufRead", "*.tf", "set syntax=tf"},
   },
 })
