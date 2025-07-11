@@ -276,7 +276,7 @@ vim.api.nvim_create_autocmd("FileType", {
       name = "gopls",
       cmd = { "gopls" },
       -- root_dir = vim.loop.cwd(),
-      root_dir = vim.fs.dirname(vim.fs.find({ "go.mod", ".git" }, { upward = true })[1]),
+      -- root_dir = vim.fs.dirname(vim.fs.find({ "go.mod", ".git" }, { upward = true })[1]),
       on_attach = on_attach,
       capabilities = capabilities,
       settings = {
