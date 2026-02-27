@@ -83,9 +83,25 @@ vim.g.onedark_terminal_italics = 2
 vim.cmd[[colorscheme onedark]]
 
 --Set statusbar
-vim.g.lightline = { colorscheme = 'onedark';
-      active = { left = { { 'mode', 'paste' }, { 'gitbranch', 'readonly', 'filename', 'modified' } } };
-      component_function = { gitbranch = 'fugitive#head', };
+-- Define a VimL function (lightline calls VimL functions by name)
+vim.cmd([[
+function! LightlineFilename() abort
+  return empty(expand('%:p')) ? '[No Name]' : expand('%:p')
+endfunction
+]])
+
+vim.g.lightline = {
+  colorscheme = 'onedark',
+  active = {
+    left = {
+      { 'mode', 'paste' },
+      { 'gitbranch', 'readonly', 'filename', 'modified' },
+    },
+  },
+  component_function = {
+    gitbranch = 'fugitive#head',
+    filename  = 'LightlineFilename',
+  },
 }
 
 --Remap space as leader key
