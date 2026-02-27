@@ -196,8 +196,6 @@ vim.api.nvim_set_keymap('n', '<leader>gp', [[<cmd>lua require('telescope.builtin
 -- Change preview window location
 vim.g.splitbelow = true
 
--- Y yank until the end of line
-vim.api.nvim_set_keymap('n', 'Y', 'yy', { noremap = true})
 --
 -- LSP settings
 local on_attach = function(_client, bufnr)
