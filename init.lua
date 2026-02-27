@@ -37,8 +37,6 @@ require('lazy').setup({
   'hrsh7th/cmp-cmdline',
   'hrsh7th/cmp-vsnip',
   'hrsh7th/vim-vsnip',
-  -- Manage gopls imports
-  'mattn/vim-goimports',
   'hashivim/vim-terraform',
 })
 
@@ -232,20 +230,6 @@ end
 local cmp = require('cmp')
 
 cmp.setup({
-  enabled = true,
-  autocomplete = true,
-  debug = false,
-  min_length = 1,
-  preselect = 'enable',
-  throttle_time = 80,
-  source_timeout = 200,
-  incomplete_delay = 400,
-  max_abbr_width = 100,
-  max_kind_width = 100,
-  max_menu_width = 100,
-  window = {
-    bordered = true,
-  },
   snippet = {
     expand = function(args)
       vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
@@ -291,8 +275,7 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.lsp.start({
       name = "gopls",
       cmd = { "gopls" },
-      -- root_dir = vim.loop.cwd(),
-      -- root_dir = vim.fs.dirname(vim.fs.find({ "go.mod", ".git" }, { upward = true })[1]),
+      root_dir = vim.fs.dirname(vim.fs.find({ "go.mod" }, { upward = true, path = vim.api.nvim_buf_get_name(0) })[1]),
       on_attach = on_attach,
       capabilities = capabilities,
       settings = {
@@ -338,22 +321,21 @@ function goimports(timeoutms)
   vim.lsp.buf.format({async = false})
 end
 
-function nvim_create_augroups(definitions)
-  for group_name, definition in pairs(definitions) do
-    vim.api.nvim_command('augroup '..group_name)
-    vim.api.nvim_command('autocmd!')
-    for _, def in ipairs(definition) do
-      local command = table.concat(vim.iter({'autocmd', def}):flatten():totable(), ' ')
-      vim.api.nvim_command(command)
-    end
-    vim.api.nvim_command('augroup END')
-  end
-end
+local augroup = vim.api.nvim_create_augroup("auto_cmds", { clear = true })
 
-nvim_create_augroups({
-  auto_cmds = {
-    {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
-    {"BufWritePre", "*.go", "lua goimports(3000)"},
-    {"BufNewFile,BufRead", "*.tf", "set syntax=tf"},
-  },
+vim.api.nvim_create_autocmd("TextYankPost", {
+  group = augroup,
+  callback = function() vim.highlight.on_yank() end,
+})
+
+vim.api.nvim_create_autocmd("BufWritePre", {
+  group = augroup,
+  pattern = "*.go",
+  callback = function() goimports(3000) end,
+})
+
+vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
+  group = augroup,
+  pattern = "*.tf",
+  command = "set syntax=tf",
 })
