@@ -1,46 +1,48 @@
--- Install packer
-local execute = vim.api.nvim_command
-
-local install_path = vim.fn.stdpath('data') .. '/site/pack/packer/start/packer.nvim'
-if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-  execute('!git clone https://github.com/wbthomason/packer.nvim '.. install_path)
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
+  vim.fn.system({
+    'git', 'clone', '--filter=blob:none',
+    'https://github.com/folke/lazy.nvim.git',
+    '--branch=stable',
+    lazypath,
+  })
 end
+vim.opt.rtp:prepend(lazypath)
 
-local use = require('packer').use
-require('packer').startup(function()
-  -- Package manager
-  use 'wbthomason/packer.nvim'
+require('lazy').setup({
   -- Git commands in nvim
-  use 'tpope/vim-fugitive'
+  'tpope/vim-fugitive',
   -- Fugitive-companion to interact with github
-  use 'tpope/vim-rhubarb'
+  'tpope/vim-rhubarb',
   -- "gc" to comment visual regions/lines
-  use 'tpope/vim-commentary'
+  'tpope/vim-commentary',
   -- UI to select things (files, grep results, open buffers...)
-  use {'nvim-telescope/telescope.nvim', requires = {{'nvim-lua/popup.nvim'}, {'nvim-lua/plenary.nvim'}} }
+  { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   -- Theme inspired by Atom
-  use 'joshdick/onedark.vim'
+  'joshdick/onedark.vim',
   -- Fancier statusline
-  use 'itchyny/lightline.vim'
+  'itchyny/lightline.vim',
   -- Add indentation guides even on blank lines
-  use { 'lukas-reineke/indent-blankline.nvim', branch = 'master'}
+  'lukas-reineke/indent-blankline.nvim',
   -- Add git related info in the signs columns and popups
-  use {'lewis6991/gitsigns.nvim', requires = {'nvim-lua/plenary.nvim'} }
+  { 'lewis6991/gitsigns.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   -- Collection of configurations for built-in LSP client
-  use 'neovim/nvim-lspconfig'
+  'neovim/nvim-lspconfig',
   -- Autocompletion plugin
-  use 'hrsh7th/nvim-cmp'
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'hrsh7th/cmp-buffer'
-  use 'hrsh7th/cmp-path'
-  use 'hrsh7th/cmp-cmdline'
-  use 'hrsh7th/cmp-vsnip'
-  use 'hrsh7th/vim-vsnip'
- -- Pluging managin gopls imports
-  use 'mattn/vim-goimports'
-  vim.opt.completeopt = { "menu", "menuone", "noselect" }
-  use 'hashivim/vim-terraform'
-end)
+  'hrsh7th/nvim-cmp',
+  'hrsh7th/cmp-nvim-lsp',
+  'hrsh7th/cmp-buffer',
+  'hrsh7th/cmp-path',
+  'hrsh7th/cmp-cmdline',
+  'hrsh7th/cmp-vsnip',
+  'hrsh7th/vim-vsnip',
+  -- Manage gopls imports
+  'mattn/vim-goimports',
+  'hashivim/vim-terraform',
+})
+
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
 vim.o.shell = "/bin/zsh"
 --Incremental live completion
@@ -352,7 +354,6 @@ end
 
 nvim_create_augroups({
   auto_cmds = {
-    {"BufWritePost", "init.lua", "PackerCompile"},
     {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
     {"BufWritePre", "*.go", "lua vim.lsp.buf.format()"},
     {"BufWritePre", "*.go", "lua goimports(3000)"},
