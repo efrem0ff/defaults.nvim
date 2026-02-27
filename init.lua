@@ -353,7 +353,6 @@ end
 nvim_create_augroups({
   auto_cmds = {
     {"TextYankPost", "*",  "silent! lua vim.highlight.on_yank()"},
-    {"BufWritePre", "*.go", "lua vim.lsp.buf.format()"},
     {"BufWritePre", "*.go", "lua goimports(3000)"},
     {"BufNewFile,BufRead", "*.tf", "set syntax=tf"},
   },
