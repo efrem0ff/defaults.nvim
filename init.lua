@@ -132,7 +132,7 @@ require("ibl").setup {
         char = "┊",
     },
     exclude = {
-        filetypes = { "help", "packer" },
+        filetypes = { "help", "lazy" },
         buftypes = { "terminal", "nofile" },
     },
     scope = { enabled = false },
