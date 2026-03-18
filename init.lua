@@ -10,6 +10,27 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- Set lightline config BEFORE lazy.setup so it's available when lightline loads
+vim.cmd([[
+function! LightlineFilename() abort
+  return empty(expand('%:p')) ? '[No Name]' : expand('%:p')
+endfunction
+]])
+
+vim.g.lightline = {
+  colorscheme = 'onedark',
+  active = {
+    left = {
+      { 'mode', 'paste' },
+      { 'gitbranch', 'readonly', 'filename', 'modified' },
+    },
+  },
+  component_function = {
+    gitbranch = 'FugitiveHead',
+    filename  = 'LightlineFilename',
+  },
+}
+
 require('lazy').setup({
   -- Git commands in nvim
   'tpope/vim-fugitive',
@@ -81,28 +102,6 @@ vim.wo.signcolumn="yes"
 vim.o.termguicolors = true
 vim.g.onedark_terminal_italics = 2
 vim.cmd[[colorscheme onedark]]
-
---Set statusbar
--- Define a VimL function (lightline calls VimL functions by name)
-vim.cmd([[
-function! LightlineFilename() abort
-  return empty(expand('%:p')) ? '[No Name]' : expand('%:p')
-endfunction
-]])
-
-vim.g.lightline = {
-  colorscheme = 'onedark',
-  active = {
-    left = {
-      { 'mode', 'paste' },
-      { 'gitbranch', 'readonly', 'filename', 'modified' },
-    },
-  },
-  component_function = {
-    gitbranch = 'fugitive#head',
-    filename  = 'LightlineFilename',
-  },
-}
 
 --Remap space as leader key
 vim.api.nvim_set_keymap('', '<Space>', '<Nop>', { noremap = true, silent=true})
