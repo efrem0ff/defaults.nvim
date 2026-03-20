@@ -337,6 +337,8 @@ cmp.setup({
 --nvim-cmp
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
 capabilities.textDocument.positionEncoding = "utf-16"
+capabilities.workspace = capabilities.workspace or {}
+capabilities.workspace.didChangeWatchedFiles = { dynamicRegistration = true }
 -- setup languages
 -- GoLang
 vim.api.nvim_create_autocmd("FileType", {
@@ -345,7 +347,18 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.lsp.start({
       name = "gopls",
       cmd = { "gopls" },
-      root_dir = vim.fs.dirname(vim.fs.find({ "go.mod" }, { upward = true, path = vim.api.nvim_buf_get_name(0) })[1]),
+      -- Find nearest go.mod, but for files in module cache (go/pkg/mod/)
+      -- reuse existing gopls to avoid spawning a separate instance
+      root_dir = (function()
+        local bufpath = vim.api.nvim_buf_get_name(0)
+        if bufpath:find("/go/pkg/mod/") then
+          for _, client in ipairs(vim.lsp.get_clients({ name = "gopls" })) do
+            return client.config.root_dir
+          end
+        end
+        local modfile = vim.fs.find({ "go.mod" }, { upward = true, path = bufpath })[1]
+        return modfile and vim.fs.dirname(modfile) or nil
+      end)(),
       on_attach = on_attach,
       capabilities = capabilities,
       settings = {
