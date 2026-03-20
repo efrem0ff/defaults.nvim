@@ -109,16 +109,16 @@ vim.g.onedark_terminal_italics = 2
 vim.cmd([[colorscheme onedark]])
 
 --Remap space as leader key
-vim.api.nvim_set_keymap("", "<Space>", "<Nop>", { noremap = true, silent = true })
+vim.keymap.set("", "<Space>", "<Nop>")
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 --Remap for dealing with word wrap
-vim.api.nvim_set_keymap("n", "k", "v:count == 0 ? 'gk' : 'k'", { noremap = true, expr = true, silent = true })
-vim.api.nvim_set_keymap("n", "j", "v:count == 0 ? 'gj' : 'j'", { noremap = true, expr = true, silent = true })
+vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true })
+vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true })
 
 --Remap escape to leave terminal mode
-vim.api.nvim_set_keymap("t", "<Esc>", [[<c-\><c-n>]], { noremap = true })
+vim.keymap.set("t", "<Esc>", [[<c-\><c-n>]])
 
 vim.api.nvim_create_user_command("E", "Explore", {})
 
@@ -154,9 +154,9 @@ ToggleMouse = function()
     print("Mouse enabled")
   end
 end
-vim.api.nvim_set_keymap("n", "<F10>", "<cmd>lua ToggleMouse()<cr>", { noremap = true })
+vim.keymap.set("n", "<F10>", ToggleMouse)
 
-vim.api.nvim_set_keymap("n", "<leader>T", ":tabnew<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>T", ":tabnew<CR>")
 
 -- Telescope
 require("telescope").setup({
@@ -182,78 +182,19 @@ require("telescope").setup({
 })
 
 --Add leader shortcuts
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>f",
-  [[<cmd>lua require('telescope.builtin').find_files()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader><space>",
-  [[<cmd>lua require('telescope.builtin').buffers()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>l",
-  [[<cmd>lua require('telescope.builtin').current_buffer_fuzzy_find()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>t",
-  [[<cmd>lua require('telescope.builtin').tags()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>?",
-  [[<cmd>lua require('telescope.builtin').oldfiles()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>sd",
-  [[<cmd>lua require('telescope.builtin').grep_string()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>sp",
-  [[<cmd>lua require('telescope.builtin').live_grep()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>o",
-  [[<cmd>lua require('telescope.builtin').tags{ only_current_buffer = true }<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>gc",
-  [[<cmd>lua require('telescope.builtin').git_commits()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>gb",
-  [[<cmd>lua require('telescope.builtin').git_branches()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>gs",
-  [[<cmd>lua require('telescope.builtin').git_status()<cr>]],
-  { noremap = true, silent = true }
-)
-vim.api.nvim_set_keymap(
-  "n",
-  "<leader>gp",
-  [[<cmd>lua require('telescope.builtin').git_bcommits()<cr>]],
-  { noremap = true, silent = true }
-)
+local builtin = require("telescope.builtin")
+vim.keymap.set("n", "<leader>f", builtin.find_files)
+vim.keymap.set("n", "<leader><space>", builtin.buffers)
+vim.keymap.set("n", "<leader>l", builtin.current_buffer_fuzzy_find)
+vim.keymap.set("n", "<leader>t", builtin.tags)
+vim.keymap.set("n", "<leader>?", builtin.oldfiles)
+vim.keymap.set("n", "<leader>sd", builtin.grep_string)
+vim.keymap.set("n", "<leader>sp", builtin.live_grep)
+vim.keymap.set("n", "<leader>o", function() builtin.tags({ only_current_buffer = true }) end)
+vim.keymap.set("n", "<leader>gc", builtin.git_commits)
+vim.keymap.set("n", "<leader>gb", builtin.git_branches)
+vim.keymap.set("n", "<leader>gs", builtin.git_status)
+vim.keymap.set("n", "<leader>gp", builtin.git_bcommits)
 
 -- Change preview window location
 vim.g.splitbelow = true
@@ -263,29 +204,23 @@ vim.g.splitbelow = true
 local on_attach = function(_client, bufnr)
   vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-  local opts = { noremap = true, silent = true }
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gD", "<Cmd>lua vim.lsp.buf.declaration()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "K", "<Cmd>lua vim.lsp.buf.hover()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>wa", "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>wr", "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(
-    bufnr,
-    "n",
-    "<leader>wl",
-    "<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>",
-    opts
-  )
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>D", "<cmd>lua vim.lsp.buf.type_definition()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>ca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "[d", "<cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "]d", "<cmd>lua vim.diagnostic.goto_next()<CR>", opts)
-  vim.api.nvim_buf_set_keymap(bufnr, "n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
+  local map = function(keys, func) vim.keymap.set("n", keys, func, { buffer = bufnr }) end
+  map("gD", vim.lsp.buf.declaration)
+  map("gd", vim.lsp.buf.definition)
+  map("K", vim.lsp.buf.hover)
+  map("gi", vim.lsp.buf.implementation)
+  map("<C-k>", vim.lsp.buf.signature_help)
+  map("<leader>wa", vim.lsp.buf.add_workspace_folder)
+  map("<leader>wr", vim.lsp.buf.remove_workspace_folder)
+  map("<leader>wl", function() print(vim.inspect(vim.lsp.buf.list_workspace_folders())) end)
+  map("<leader>D", vim.lsp.buf.type_definition)
+  map("<leader>rn", vim.lsp.buf.rename)
+  map("gr", vim.lsp.buf.references)
+  map("<leader>ca", vim.lsp.buf.code_action)
+  map("<leader>e", vim.diagnostic.open_float)
+  map("[d", vim.diagnostic.goto_prev)
+  map("]d", vim.diagnostic.goto_next)
+  map("<leader>q", vim.diagnostic.setloclist)
 end
 
 local has_words_before = function()
@@ -379,10 +314,9 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
-local opts = { noremap = true, silent = true }
-vim.api.nvim_set_keymap("n", "<C-n>", ":cn<CR>", opts)
-vim.api.nvim_set_keymap("n", "<C-p>", ":cp<CR>", opts)
-vim.api.nvim_set_keymap("n", "<C-c>", ":ccl<CR>", opts)
+vim.keymap.set("n", "<C-n>", ":cn<CR>")
+vim.keymap.set("n", "<C-p>", ":cp<CR>")
+vim.keymap.set("n", "<C-c>", ":ccl<CR>")
 
 function goimports(timeoutms)
   local params = vim.lsp.util.make_range_params(nil, vim.lsp.util._get_offset_encoding())
