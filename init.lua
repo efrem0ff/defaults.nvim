@@ -282,11 +282,14 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.lsp.start({
       name = "gopls",
       cmd = { "gopls" },
-      -- Find nearest go.mod, but for files in module cache (go/pkg/mod/)
+      -- Find nearest go.mod; for external files (module cache, Go stdlib)
       -- reuse existing gopls to avoid spawning a separate instance
       root_dir = (function()
         local bufpath = vim.api.nvim_buf_get_name(0)
-        if bufpath:find("/go/pkg/mod/") then
+        local goroot = os.getenv("GOROOT") or vim.fn.system("go env GOROOT"):gsub("%s+$", "")
+        local gopath = os.getenv("GOPATH") or (vim.env.HOME .. "/go")
+        -- External file: inside GOROOT or module cache
+        if bufpath:find(goroot, 1, true) or bufpath:find(gopath .. "/pkg/mod/", 1, true) then
           for _, client in ipairs(vim.lsp.get_clients({ name = "gopls" })) do
             return client.config.root_dir
           end
