@@ -82,6 +82,9 @@ vim.o.hidden = true
 --Enable mouse mode
 vim.o.mouse = "a"
 
+--Auto-reload files changed outside nvim
+vim.o.autoread = true
+
 --Enable break indent
 vim.o.breakindent = true
 
@@ -395,6 +398,13 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   callback = function()
     vim.highlight.on_yank()
   end,
+})
+
+-- Re-check files changed on disk (e.g. after git checkout, external edits)
+-- when switching back to nvim or entering a buffer
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
+  group = augroup,
+  command = "checktime",
 })
 
 vim.api.nvim_create_autocmd("BufWritePre", {
