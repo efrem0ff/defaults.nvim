@@ -48,8 +48,6 @@ require("lazy").setup({
   "itchyny/lightline.vim",
   -- Add indentation guides even on blank lines
   "lukas-reineke/indent-blankline.nvim",
-  -- Add git related info in the signs columns and popups
-  { "lewis6991/gitsigns.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
   -- Collection of configurations for built-in LSP client
   "neovim/nvim-lspconfig",
   -- Autocompletion plugin
@@ -197,7 +195,7 @@ vim.keymap.set("n", "<leader>gs", builtin.git_status)
 vim.keymap.set("n", "<leader>gp", builtin.git_bcommits)
 
 -- Change preview window location
-vim.g.splitbelow = true
+vim.o.splitbelow = true
 
 --
 -- LSP settings
@@ -322,7 +320,12 @@ vim.keymap.set("n", "<C-p>", ":cp<CR>")
 vim.keymap.set("n", "<C-c>", ":ccl<CR>")
 
 function goimports(timeoutms)
-  local params = vim.lsp.util.make_range_params(nil, vim.lsp.util._get_offset_encoding())
+  local client = vim.lsp.get_clients({ bufnr = 0, name = "gopls" })[1]
+  if not client then
+    return
+  end
+  local enc = client.offset_encoding or "utf-16"
+  local params = vim.lsp.util.make_range_params(nil, enc)
   params.context = { only = { "source.organizeImports" } }
   -- buf_request_sync defaults to a 1000ms timeout. Depending on your
   -- machine and codebase, you may want longer. Add an additional
@@ -330,10 +333,9 @@ function goimports(timeoutms)
   -- twice for changes to be saved.
   -- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
   local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeoutms)
-  for cid, res in pairs(result or {}) do
+  for _, res in pairs(result or {}) do
     for _, r in pairs(res.result or {}) do
       if r.edit then
-        local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or "utf-16"
         vim.lsp.util.apply_workspace_edit(r.edit, enc)
       end
     end
@@ -346,7 +348,7 @@ local augroup = vim.api.nvim_create_augroup("auto_cmds", { clear = true })
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = augroup,
   callback = function()
-    vim.highlight.on_yank()
+    vim.hl.on_yank()
   end,
 })
 
@@ -363,10 +365,4 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   callback = function()
     goimports(3000)
   end,
-})
-
-vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-  group = augroup,
-  pattern = "*.tf",
-  command = "set syntax=tf",
 })
