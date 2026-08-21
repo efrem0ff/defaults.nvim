@@ -188,6 +188,25 @@ vim.keymap.set("n", "<leader>t", builtin.tags)
 vim.keymap.set("n", "<leader>?", builtin.oldfiles)
 vim.keymap.set("n", "<leader>sd", builtin.grep_string)
 vim.keymap.set("n", "<leader>sp", builtin.live_grep)
+-- Grep inside a directory, prompted. In-editor `cd <dir> && rg <name>`.
+vim.keymap.set("n", "<leader>sf", function()
+  local buf = vim.api.nvim_buf_get_name(0)
+  local default = buf ~= "" and vim.fn.fnamemodify(buf, ":h:.") .. "/" or "."
+  vim.ui.input({ prompt = "Dir: ", default = default, completion = "dir" }, function(input)
+    if not input or input == "" then
+      return
+    end
+    local dir = vim.fn.fnamemodify(vim.fn.expand(input), ":p")
+    if vim.fn.isdirectory(dir) == 0 then
+      vim.notify("Not a directory: " .. input, vim.log.levels.ERROR)
+      return
+    end
+    builtin.live_grep({
+      cwd = dir,
+      prompt_title = "Grep in " .. vim.fn.fnamemodify(dir, ":~:."),
+    })
+  end)
+end)
 vim.keymap.set("n", "<leader>o", function() builtin.tags({ only_current_buffer = true }) end)
 vim.keymap.set("n", "<leader>gc", builtin.git_commits)
 vim.keymap.set("n", "<leader>gb", builtin.git_branches)
