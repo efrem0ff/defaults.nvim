@@ -385,3 +385,19 @@ vim.api.nvim_create_autocmd("BufWritePre", {
     goimports(3000)
   end,
 })
+
+-- Render markdown with glow. Terminal buffer because glow only colors to a tty.
+vim.api.nvim_create_autocmd("FileType", {
+  group = augroup,
+  pattern = "markdown",
+  callback = function()
+    vim.keymap.set("n", "<leader>md", function()
+      vim.cmd("write")
+      local file = vim.api.nvim_buf_get_name(0)
+      vim.cmd("enew")
+      vim.fn.jobstart({ "glow", file }, { term = true })
+      vim.cmd("stopinsert")
+      vim.keymap.set("n", "q", "<cmd>bdelete!<cr>", { buffer = true })
+    end, { buffer = true })
+  end,
+})
