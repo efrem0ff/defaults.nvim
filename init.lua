@@ -220,6 +220,13 @@ vim.o.splitbelow = true
 
 --
 -- LSP settings
+
+-- nvim 0.11 ships global grr/grn/gra/gri/grt, which makes plain gr wait
+-- timeoutlen before firing. The maps below cover all five.
+for _, key in ipairs({ "grr", "grn", "gra", "gri", "grt" }) do
+  pcall(vim.keymap.del, "n", key)
+end
+
 local on_attach = function(_client, bufnr)
   vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
 
