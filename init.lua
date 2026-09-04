@@ -55,7 +55,6 @@ require("lazy").setup({
   "hrsh7th/cmp-nvim-lsp",
   "hrsh7th/cmp-buffer",
   "hrsh7th/cmp-path",
-  "hrsh7th/cmp-cmdline",
   "hrsh7th/cmp-vsnip",
   "hrsh7th/vim-vsnip",
   "hashivim/vim-terraform",
@@ -268,6 +267,22 @@ cmp.setup({
   },
   mapping = {
     ["<CR>"] = cmp.mapping.confirm({ select = false }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
+    -- Snippet placeholders get their own keys. <Tab> cannot serve both, because
+    -- inside a snippet the completion popup reopens as soon as you type.
+    ["<C-l>"] = cmp.mapping(function(fallback)
+      if vim.fn["vsnip#jumpable"](1) == 1 then
+        feedkey("<Plug>(vsnip-jump-next)", "")
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ["<C-h>"] = cmp.mapping(function(fallback)
+      if vim.fn["vsnip#jumpable"](-1) == 1 then
+        feedkey("<Plug>(vsnip-jump-prev)", "")
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
     ["<Tab>"] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_next_item()
@@ -292,6 +307,7 @@ cmp.setup({
     { name = "vsnip" }, -- For vsnip users.
   }, {
     { name = "buffer" },
+    { name = "path" },
   }),
 })
 
