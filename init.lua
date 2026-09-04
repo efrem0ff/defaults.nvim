@@ -298,7 +298,6 @@ cmp.setup({
 
 --nvim-cmp
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
-capabilities.textDocument.positionEncoding = "utf-16"
 capabilities.workspace = capabilities.workspace or {}
 capabilities.workspace.didChangeWatchedFiles = { dynamicRegistration = true }
 -- setup languages
