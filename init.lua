@@ -302,46 +302,27 @@ capabilities.workspace = capabilities.workspace or {}
 capabilities.workspace.didChangeWatchedFiles = { dynamicRegistration = true }
 -- setup languages
 -- GoLang
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "go",
-  callback = function()
-    vim.lsp.start({
-      name = "gopls",
-      cmd = { "gopls" },
-      -- Find nearest go.mod; for external files (module cache, Go stdlib)
-      -- reuse existing gopls to avoid spawning a separate instance
-      root_dir = (function()
-        local bufpath = vim.api.nvim_buf_get_name(0)
-        local goroot = os.getenv("GOROOT") or vim.fn.system("go env GOROOT"):gsub("%s+$", "")
-        local gopath = os.getenv("GOPATH") or (vim.env.HOME .. "/go")
-        -- External file: inside GOROOT or module cache
-        if bufpath:find(goroot, 1, true) or bufpath:find(gopath .. "/pkg/mod/", 1, true) then
-          for _, client in ipairs(vim.lsp.get_clients({ name = "gopls" })) do
-            return client.config.root_dir
-          end
-        end
-        local modfile = vim.fs.find({ "go.mod" }, { upward = true, path = bufpath })[1]
-        return modfile and vim.fs.dirname(modfile) or nil
-      end)(),
-      on_attach = on_attach,
-      capabilities = capabilities,
-      settings = {
-        gopls = {
-          buildFlags = { "-tags=integration" },
-          experimentalPostfixCompletions = true,
-          analyses = {
-            unusedparams = true,
-            shadow = true,
-          },
-          staticcheck = true,
-        },
+-- Merges into the gopls config nvim-lspconfig ships, which already reuses a
+-- running gopls for module cache and stdlib files.
+vim.lsp.config("gopls", {
+  on_attach = on_attach,
+  capabilities = capabilities,
+  settings = {
+    gopls = {
+      buildFlags = { "-tags=integration" },
+      experimentalPostfixCompletions = true,
+      analyses = {
+        unusedparams = true,
+        shadow = true,
       },
-      init_options = {
-        usePlaceholders = true,
-      },
-    })
-  end,
+      staticcheck = true,
+    },
+  },
+  init_options = {
+    usePlaceholders = true,
+  },
 })
+vim.lsp.enable("gopls")
 
 vim.keymap.set("n", "<C-n>", ":cn<CR>")
 vim.keymap.set("n", "<C-p>", ":cp<CR>")
