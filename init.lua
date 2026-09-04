@@ -104,16 +104,16 @@ vim.g.onedark_terminal_italics = 2
 vim.cmd([[colorscheme onedark]])
 
 --Remap space as leader key
-vim.keymap.set("", "<Space>", "<Nop>")
+vim.keymap.set("", "<Space>", "<Nop>", { desc = "Disable space so it can act as leader" })
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 --Remap for dealing with word wrap
-vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true })
-vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true })
+vim.keymap.set("n", "k", "v:count == 0 ? 'gk' : 'k'", { expr = true, desc = "Up by screen line when no count" })
+vim.keymap.set("n", "j", "v:count == 0 ? 'gj' : 'j'", { expr = true, desc = "Down by screen line when no count" })
 
 --Remap escape to leave terminal mode
-vim.keymap.set("t", "<Esc>", [[<c-\><c-n>]])
+vim.keymap.set("t", "<Esc>", [[<c-\><c-n>]], { desc = "Leave terminal mode" })
 
 vim.api.nvim_create_user_command("E", "Explore", {})
 
@@ -149,9 +149,9 @@ local ToggleMouse = function()
     print("Mouse enabled")
   end
 end
-vim.keymap.set("n", "<F10>", ToggleMouse)
+vim.keymap.set("n", "<F10>", ToggleMouse, { desc = "Toggle mouse, signs, numbers and indent guides" })
 
-vim.keymap.set("n", "<leader>T", ":tabnew<CR>")
+vim.keymap.set("n", "<leader>T", ":tabnew<CR>", { desc = "New tab" })
 
 -- Telescope
 require("telescope").setup({
@@ -178,12 +178,12 @@ require("telescope").setup({
 
 --Add leader shortcuts
 local builtin = require("telescope.builtin")
-vim.keymap.set("n", "<leader>f", builtin.find_files)
-vim.keymap.set("n", "<leader><space>", builtin.buffers)
-vim.keymap.set("n", "<leader>l", builtin.current_buffer_fuzzy_find)
-vim.keymap.set("n", "<leader>?", builtin.oldfiles)
-vim.keymap.set("n", "<leader>sd", builtin.grep_string)
-vim.keymap.set("n", "<leader>sp", builtin.live_grep)
+vim.keymap.set("n", "<leader>f", builtin.find_files, { desc = "Find files" })
+vim.keymap.set("n", "<leader><space>", builtin.buffers, { desc = "Find open buffers" })
+vim.keymap.set("n", "<leader>l", builtin.current_buffer_fuzzy_find, { desc = "Fuzzy find in current buffer" })
+vim.keymap.set("n", "<leader>?", builtin.oldfiles, { desc = "Find recently opened files" })
+vim.keymap.set("n", "<leader>sd", builtin.grep_string, { desc = "Grep word under cursor" })
+vim.keymap.set("n", "<leader>sp", builtin.live_grep, { desc = "Grep in project" })
 -- Grep inside a directory, prompted. In-editor `cd <dir> && rg <name>`.
 vim.keymap.set("n", "<leader>sf", function()
   local buf = vim.api.nvim_buf_get_name(0)
@@ -202,11 +202,11 @@ vim.keymap.set("n", "<leader>sf", function()
       prompt_title = "Grep in " .. vim.fn.fnamemodify(dir, ":~:."),
     })
   end)
-end)
-vim.keymap.set("n", "<leader>gc", builtin.git_commits)
-vim.keymap.set("n", "<leader>gb", builtin.git_branches)
-vim.keymap.set("n", "<leader>gs", builtin.git_status)
-vim.keymap.set("n", "<leader>gp", builtin.git_bcommits)
+end, { desc = "Grep in a prompted directory" })
+vim.keymap.set("n", "<leader>gc", builtin.git_commits, { desc = "Git commits" })
+vim.keymap.set("n", "<leader>gb", builtin.git_branches, { desc = "Git branches" })
+vim.keymap.set("n", "<leader>gs", builtin.git_status, { desc = "Git status" })
+vim.keymap.set("n", "<leader>gp", builtin.git_bcommits, { desc = "Git commits for current buffer" })
 
 -- Change preview window location
 vim.o.splitbelow = true
@@ -223,30 +223,30 @@ end
 local on_attach = function(_client, bufnr)
   vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
 
-  local map = function(keys, func)
-    vim.keymap.set("n", keys, func, { buffer = bufnr })
+  local map = function(keys, func, desc)
+    vim.keymap.set("n", keys, func, { buffer = bufnr, desc = desc })
   end
-  map("gD", vim.lsp.buf.declaration)
-  map("gd", vim.lsp.buf.definition)
-  map("gi", vim.lsp.buf.implementation)
-  map("<C-k>", vim.lsp.buf.signature_help)
-  map("<leader>wa", vim.lsp.buf.add_workspace_folder)
-  map("<leader>wr", vim.lsp.buf.remove_workspace_folder)
+  map("gD", vim.lsp.buf.declaration, "Go to declaration")
+  map("gd", vim.lsp.buf.definition, "Go to definition")
+  map("gi", vim.lsp.buf.implementation, "Go to implementation")
+  map("<C-k>", vim.lsp.buf.signature_help, "Signature help")
+  map("<leader>wa", vim.lsp.buf.add_workspace_folder, "Add workspace folder")
+  map("<leader>wr", vim.lsp.buf.remove_workspace_folder, "Remove workspace folder")
   map("<leader>wl", function()
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
-  end)
-  map("<leader>D", vim.lsp.buf.type_definition)
-  map("<leader>rn", vim.lsp.buf.rename)
-  map("gr", vim.lsp.buf.references)
-  map("<leader>ca", vim.lsp.buf.code_action)
-  map("<leader>e", vim.diagnostic.open_float)
+  end, "List workspace folders")
+  map("<leader>D", vim.lsp.buf.type_definition, "Go to type definition")
+  map("<leader>rn", vim.lsp.buf.rename, "Rename symbol")
+  map("gr", vim.lsp.buf.references, "List references")
+  map("<leader>ca", vim.lsp.buf.code_action, "Code action")
+  map("<leader>e", vim.diagnostic.open_float, "Show diagnostic in a float")
   map("[d", function()
     vim.diagnostic.jump({ count = -1, float = true })
-  end)
+  end, "Previous diagnostic")
   map("]d", function()
     vim.diagnostic.jump({ count = 1, float = true })
-  end)
-  map("<leader>q", vim.diagnostic.setloclist)
+  end, "Next diagnostic")
+  map("<leader>q", vim.diagnostic.setloclist, "Diagnostics to location list")
 end
 
 local has_words_before = function()
@@ -323,9 +323,9 @@ vim.lsp.config("gopls", {
 })
 vim.lsp.enable("gopls")
 
-vim.keymap.set("n", "<C-n>", ":cn<CR>")
-vim.keymap.set("n", "<C-p>", ":cp<CR>")
-vim.keymap.set("n", "<C-c>", ":ccl<CR>")
+vim.keymap.set("n", "<C-n>", ":cn<CR>", { desc = "Next quickfix entry" })
+vim.keymap.set("n", "<C-p>", ":cp<CR>", { desc = "Previous quickfix entry" })
+vim.keymap.set("n", "<C-c>", ":ccl<CR>", { desc = "Close quickfix window" })
 
 local function goimports(timeoutms)
   local client = vim.lsp.get_clients({ bufnr = 0, name = "gopls" })[1]
@@ -386,7 +386,7 @@ vim.api.nvim_create_autocmd("FileType", {
       vim.cmd("enew")
       vim.fn.jobstart({ "glow", file }, { term = true })
       vim.cmd("stopinsert")
-      vim.keymap.set("n", "q", "<cmd>bdelete!<cr>", { buffer = true })
-    end, { buffer = true })
+      vim.keymap.set("n", "q", "<cmd>bdelete!<cr>", { buffer = true, desc = "Close glow preview" })
+    end, { buffer = true, desc = "Render markdown with glow" })
   end,
 })
