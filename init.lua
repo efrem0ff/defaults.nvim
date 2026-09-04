@@ -231,7 +231,6 @@ local on_attach = function(_client, bufnr)
   end
   map("gD", vim.lsp.buf.declaration)
   map("gd", vim.lsp.buf.definition)
-  map("K", vim.lsp.buf.hover)
   map("gi", vim.lsp.buf.implementation)
   map("<C-k>", vim.lsp.buf.signature_help)
   map("<leader>wa", vim.lsp.buf.add_workspace_folder)
