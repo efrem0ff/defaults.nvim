@@ -323,6 +323,25 @@ vim.lsp.config("gopls", {
 })
 vim.lsp.enable("gopls")
 
+-- Terraform
+-- The default markers are .terraform and .git, so a module directory without
+-- .terraform roots the server at the repository top instead. Terraform works a
+-- directory at a time, so that directory is the right fallback.
+vim.lsp.config("terraformls", {
+  on_attach = function(client, bufnr)
+    on_attach(client, bufnr)
+    -- Passing our own on_attach replaces the one nvim-lspconfig sets, which
+    -- is the only thing turning code lens on.
+    vim.lsp.codelens.enable(true, { bufnr = bufnr })
+  end,
+  capabilities = capabilities,
+  root_dir = function(bufnr, on_dir)
+    local fname = vim.api.nvim_buf_get_name(bufnr)
+    on_dir(vim.fs.root(fname, { ".terraform", ".terraform.lock.hcl" }) or vim.fs.dirname(fname))
+  end,
+})
+vim.lsp.enable("terraformls")
+
 vim.keymap.set("n", "<C-n>", ":cn<CR>", { desc = "Next quickfix entry" })
 vim.keymap.set("n", "<C-p>", ":cp<CR>", { desc = "Previous quickfix entry" })
 vim.keymap.set("n", "<C-c>", ":ccl<CR>", { desc = "Close quickfix window" })
