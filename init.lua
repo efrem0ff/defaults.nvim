@@ -330,7 +330,7 @@ vim.keymap.set("n", "<C-n>", ":cn<CR>")
 vim.keymap.set("n", "<C-p>", ":cp<CR>")
 vim.keymap.set("n", "<C-c>", ":ccl<CR>")
 
-function goimports(timeoutms)
+local function goimports(timeoutms)
   local client = vim.lsp.get_clients({ bufnr = 0, name = "gopls" })[1]
   if not client then
     return
