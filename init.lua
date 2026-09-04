@@ -157,8 +157,8 @@ require("telescope").setup({
   defaults = {
     mappings = {
       i = {
-        ["<C-u>"] = false,
-        ["<C-d>"] = false,
+        ["<C-j>"] = require("telescope.actions").move_selection_next,
+        ["<C-k>"] = require("telescope.actions").move_selection_previous,
       },
     },
     generic_sorter = require("telescope.sorters").get_fzy_sorter,
@@ -183,6 +183,7 @@ vim.keymap.set("n", "<leader>l", builtin.current_buffer_fuzzy_find, { desc = "Fu
 vim.keymap.set("n", "<leader>?", builtin.oldfiles, { desc = "Find recently opened files" })
 vim.keymap.set("n", "<leader>sd", builtin.grep_string, { desc = "Grep word under cursor" })
 vim.keymap.set("n", "<leader>sp", builtin.live_grep, { desc = "Grep in project" })
+vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "Reopen last picker" })
 -- Grep inside a directory, prompted. In-editor `cd <dir> && rg <name>`.
 vim.keymap.set("n", "<leader>sf", function()
   local buf = vim.api.nvim_buf_get_name(0)
