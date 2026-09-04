@@ -137,7 +137,7 @@ require("ibl").setup({
   },
   scope = { enabled = false },
 })
-ToggleMouse = function()
+local ToggleMouse = function()
   if vim.o.mouse == "a" then
     vim.cmd([[IBLDisable]])
     vim.wo.signcolumn = "no"
