@@ -1,15 +1,8 @@
-{ pkgs ? import <nixpkgs> {
-    overlays = [
-      (import (builtins.fetchTarball {
-        url = https://github.com/nix-community/neovim-nightly-overlay/archive/master.tar.gz;
-      }))
-    ];
-  }
-}:
-with pkgs;
-mkShell {
-  buildInputs = [
-    neovim-nightly
+{ pkgs ? import <nixpkgs> { } }:
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    # init.lua uses vim.lsp.config, which needs 0.11 or newer
+    neovim
     # Language servers configured in init.lua
     gopls
     terraform-ls

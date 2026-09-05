@@ -28,7 +28,7 @@ $ make fmt    # stylua init.lua
 
 ### Running via nix (optional)
 
-Nix is a purely functional package manager, that affords reproducibility similar to a container (albeit with a very different mechanism). This repo bundles a nix-shell, which includes the latest version of neovim along with the language servers listed above and the tools telescope shells out to (ripgrep, fd). This is entirely optional, and is just a convenient way to install and manage them.
+Nix is a purely functional package manager that affords reproducibility similar to a container, albeit with a very different mechanism. This repo bundles a shell with neovim, the language servers listed above, and the tools telescope shells out to (ripgrep, fd). Use it to bring up an identical setup on another machine without installing anything by hand.
 
 1. Install nix
 ```bash
@@ -42,6 +42,6 @@ $ git clone https://github.com/efrem0ff/defaults.nvim.git && cd defaults.nvim
 
 3. Start the shell
 ```bash
-$ nix-shell
-$ nix develop # if on nixUnstable
+$ nix develop   # flakes
+$ nix-shell     # without flakes
 ```

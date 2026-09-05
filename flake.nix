@@ -1,15 +1,17 @@
 {
-  description = "A small, featureful neovim template.";
+  description = "Personal neovim configuration.";
 
-  inputs.flake-utils.url = "github:numtide/flake-utils";
-  inputs.neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs, flake-utils, neovim-nightly-overlay }:
-    flake-utils.lib.simpleFlake {
-      inherit self nixpkgs;
-      name = "default.nvim";
-      overlay = neovim-nightly-overlay.overlay;
-      shell = ./shell.nix;
-      systems = [ "x86_64-linux" "x86_64-darwin" ];
-    };
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
+      {
+        devShells.default = import ./shell.nix { inherit pkgs; };
+      });
 }
