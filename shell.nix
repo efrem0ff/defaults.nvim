@@ -10,13 +10,14 @@ with pkgs;
 mkShell {
   buildInputs = [
     neovim-nightly
-    nodePackages.diagnostic-languageserver
-    nodePackages.json-server
-    nodePackages.pyright
-    rnix-lsp
-    rust-analyzer
-    clang-tools
-    (lib.optional pkgs.stdenv.isLinux sumneko-lua-language-server)
+    # Language servers configured in init.lua
+    gopls
+    terraform-ls
+    lua-language-server
+    # Telescope shells out to these for live_grep and find_files
+    ripgrep
+    fd
+    stylua
   ];
 
   shellHook = ''
