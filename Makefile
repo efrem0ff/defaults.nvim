@@ -1,6 +1,6 @@
 .PHONY: deps
 deps:
-	brew install stylua
+	brew install stylua lua-language-server
 
 .PHONY: fmt
 fmt:
