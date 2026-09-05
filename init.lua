@@ -325,28 +325,18 @@ vim.keymap.set("n", "<C-n>", ":cn<CR>", { desc = "Next quickfix entry" })
 vim.keymap.set("n", "<C-p>", ":cp<CR>", { desc = "Previous quickfix entry" })
 vim.keymap.set("n", "<C-c>", ":ccl<CR>", { desc = "Close quickfix window" })
 
-local function goimports(timeoutms)
-  local client = vim.lsp.get_clients({ bufnr = 0, name = "gopls" })[1]
-  if not client then
-    return
-  end
-  local enc = client.offset_encoding or "utf-16"
-  local params = vim.lsp.util.make_range_params(nil, enc)
+-- Runs synchronously because BufWritePre writes the buffer the moment its
+-- callback returns, which rules out the async vim.lsp.buf.code_action.
+local function organize_imports(client, timeout_ms)
+  local params = vim.lsp.util.make_range_params(0, client.offset_encoding)
   params.context = { only = { "source.organizeImports" } }
-  -- buf_request_sync defaults to a 1000ms timeout. Depending on your
-  -- machine and codebase, you may want longer. Add an additional
-  -- argument after params if you find that you have to write the file
-  -- twice for changes to be saved.
-  -- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
-  local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, timeoutms)
-  for _, res in pairs(result or {}) do
-    for _, r in pairs(res.result or {}) do
-      if r.edit then
-        vim.lsp.util.apply_workspace_edit(r.edit, enc)
-      end
+
+  local res = client:request_sync("textDocument/codeAction", params, timeout_ms, 0)
+  for _, action in pairs(res and res.result or {}) do
+    if action.edit then
+      vim.lsp.util.apply_workspace_edit(action.edit, client.offset_encoding)
     end
   end
-  vim.lsp.buf.format({ async = false })
 end
 
 local augroup = vim.api.nvim_create_augroup("auto_cmds", { clear = true })
@@ -369,7 +359,12 @@ vim.api.nvim_create_autocmd("BufWritePre", {
   group = augroup,
   pattern = "*.go",
   callback = function()
-    goimports(3000)
+    local client = vim.lsp.get_clients({ bufnr = 0, name = "gopls" })[1]
+    if not client then
+      return
+    end
+    organize_imports(client, 3000)
+    vim.lsp.buf.format({ async = false })
   end,
 })
 
