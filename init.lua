@@ -51,12 +51,43 @@ require("lazy").setup({
   -- Collection of configurations for built-in LSP client
   "neovim/nvim-lspconfig",
   -- Autocompletion plugin
-  "hrsh7th/nvim-cmp",
-  "hrsh7th/cmp-nvim-lsp",
-  "hrsh7th/cmp-buffer",
-  "hrsh7th/cmp-path",
-  "hrsh7th/cmp-vsnip",
-  "hrsh7th/vim-vsnip",
+  {
+    "saghen/blink.cmp",
+    -- Tagged release, so lazy.nvim fetches the prebuilt matcher binary instead
+    -- of needing a Rust toolchain.
+    version = "1.*",
+    opts = {
+      keymap = {
+        preset = "none",
+        ["<CR>"] = { "accept", "fallback" },
+        ["<Tab>"] = { "select_next", "snippet_forward", "show", "fallback" },
+        ["<S-Tab>"] = { "select_prev", "snippet_backward", "fallback" },
+        -- Snippet placeholders get their own keys. <Tab> cannot serve both,
+        -- because inside a snippet the completion menu reopens as soon as you
+        -- type.
+        ["<C-l>"] = { "snippet_forward", "fallback" },
+        ["<C-h>"] = { "snippet_backward", "fallback" },
+      },
+      completion = {
+        -- Nothing is selected until you ask, so <CR> still inserts a newline.
+        list = { selection = { preselect = false } },
+      },
+      sources = {
+        default = { "lsp", "path", "snippets", "buffer" },
+        providers = {
+          buffer = { min_keyword_length = 3, score_offset = -3 },
+          path = { score_offset = -1 },
+        },
+      },
+      fuzzy = {
+        implementation = "prefer_rust_with_warning",
+        -- sort_text carries the ranking gopls computed. Keeping it in the chain
+        -- is the whole point of the switch away from nvim-cmp.
+        sorts = { "exact", "score", "sort_text" },
+      },
+      signature = { enabled = true },
+    },
+  },
   "hashivim/vim-terraform",
 })
 
@@ -249,80 +280,12 @@ local on_attach = function(_client, bufnr)
   map("<leader>q", vim.diagnostic.setloclist, "Diagnostics to location list")
 end
 
-local has_words_before = function()
-  local line, col = unpack(vim.api.nvim_win_get_cursor(0))
-  return col ~= 0 and vim.api.nvim_buf_get_lines(0, line - 1, line, true)[1]:sub(col, col):match("%s") == nil
-end
-
-local feedkey = function(key, mode)
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(key, true, true, true), mode, true)
-end
-
-local cmp = require("cmp")
-
-cmp.setup({
-  snippet = {
-    expand = function(args)
-      vim.fn["vsnip#anonymous"](args.body) -- For `vsnip` users.
-    end,
-  },
-  mapping = {
-    ["<CR>"] = cmp.mapping.confirm({ select = false }), -- Accept currently selected item. Set `select` to `false` to only confirm explicitly selected items.
-    -- Snippet placeholders get their own keys. <Tab> cannot serve both, because
-    -- inside a snippet the completion popup reopens as soon as you type.
-    ["<C-l>"] = cmp.mapping(function(fallback)
-      if vim.fn["vsnip#jumpable"](1) == 1 then
-        feedkey("<Plug>(vsnip-jump-next)", "")
-      else
-        fallback()
-      end
-    end, { "i", "s" }),
-    ["<C-h>"] = cmp.mapping(function(fallback)
-      if vim.fn["vsnip#jumpable"](-1) == 1 then
-        feedkey("<Plug>(vsnip-jump-prev)", "")
-      else
-        fallback()
-      end
-    end, { "i", "s" }),
-    ["<Tab>"] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif vim.fn["vsnip#available"](1) == 1 then
-        feedkey("<Plug>(vsnip-expand-or-jump)", "")
-      elseif has_words_before() then
-        cmp.complete()
-      else
-        fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
-      end
-    end, { "i", "s" }),
-    ["<S-Tab>"] = cmp.mapping(function()
-      if cmp.visible() then
-        cmp.select_prev_item()
-      elseif vim.fn["vsnip#jumpable"](-1) == 1 then
-        feedkey("<Plug>(vsnip-jump-prev)", "")
-      end
-    end, { "i", "s" }),
-  },
-  sources = cmp.config.sources({
-    { name = "nvim_lsp" },
-    { name = "vsnip" }, -- For vsnip users.
-  }, {
-    { name = "buffer" },
-    { name = "path" },
-  }),
-})
-
---nvim-cmp
-local capabilities = require("cmp_nvim_lsp").default_capabilities()
-capabilities.workspace = capabilities.workspace or {}
-capabilities.workspace.didChangeWatchedFiles = { dynamicRegistration = true }
 -- setup languages
 -- GoLang
 -- Merges into the gopls config nvim-lspconfig ships, which already reuses a
 -- running gopls for module cache and stdlib files.
 vim.lsp.config("gopls", {
   on_attach = on_attach,
-  capabilities = capabilities,
   settings = {
     gopls = {
       buildFlags = { "-tags=integration" },
@@ -351,7 +314,6 @@ vim.lsp.config("terraformls", {
     -- is the only thing turning code lens on.
     vim.lsp.codelens.enable(true, { bufnr = bufnr })
   end,
-  capabilities = capabilities,
   root_dir = function(bufnr, on_dir)
     local fname = vim.api.nvim_buf_get_name(bufnr)
     on_dir(vim.fs.root(fname, { ".terraform", ".terraform.lock.hcl" }) or vim.fs.dirname(fname))
